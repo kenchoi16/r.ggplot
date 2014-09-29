@@ -1,0 +1,108 @@
+# Time Series Model Diagnostic
+# Plots standardized residuals, histogram, ACF, and QQ-Plot for model validation purpose
+# You can plot up to 3 models for cross-validation
+# Model diagnostics
+ts.diag <- function(f1, f2, f3){
+
+# Load tools
+library(ggplot2)
+library(gridExtra)
+
+# Standardized residual plot
+r1 <- rstandard(f1)
+r2 <- rstandard(f2)
+r3 <- as.vector(rstandard(f3))[4:54] # drop Jan - Mar 2010 residuals
+d <- as.Date(time(r1))
+r.df <- data.frame(Date=d, Residual1=r1, Residual2=r2, Residual3=r3)
+
+rp1 <- ggplot(r.df, aes(x=Date, y=Residual1)) + 
+      geom_hline(y=0, linetype="dashed") +
+      geom_line() + 
+      geom_point() +
+      theme_minimal() +
+      ylab("Standardized Residuals")
+#rp1
+
+rp2 <- ggplot(r.df, aes(x=Date, y=Residual2)) + 
+  geom_hline(y=0, linetype="dashed") +
+  geom_line() + 
+  geom_point() +
+  theme_minimal() +
+  ylab("Standardized Residuals")
+#rp2
+
+rp3 <- ggplot(r.df, aes(x=Date, y=Residual3)) + 
+  geom_hline(y=0, linetype="dashed") +
+  geom_line() + 
+  geom_point() +
+  theme_minimal() +
+  ylab("Standardized Residuals")
+#rp3
+
+# Histogram
+hp1 <- ggplot(r.df, aes(x=Residual1)) + 
+      geom_histogram(binwidth = 0.5, fill="grey", colour="black") +
+      theme_minimal()
+#hp
+
+hp2 <- ggplot(r.df, aes(x=Residual2)) + 
+      geom_histogram(binwidth = 0.5, fill="grey", colour="black") +
+      theme_minimal()
+#hp
+
+hp3 <- ggplot(r.df, aes(x=Residual3)) + 
+      geom_histogram(binwidth = 0.5, fill="grey", colour="black") +
+      theme_minimal()
+#hp
+
+#grid.arrange(hp1,hp2,hp3)
+
+# ACF
+d.acf1 <- acf(as.vector(window(rstandard(f1), start=c(yr,mth))), plot = F, lag.max=48)
+d.acf.df1 <- with(d.acf1, data.frame(lag, acf))
+
+d.acf2 <- acf(as.vector(window(rstandard(f2), start=c(yr,mth))), plot = F, lag.max=48)
+d.acf.df2 <- with(d.acf2, data.frame(lag, acf))
+
+d.acf3 <- acf(as.vector(window(rstandard(f3), start=c(yr,mth))), plot = F, lag.max=48)
+d.acf.df3 <- with(d.acf3, data.frame(lag, acf))
+
+ap1 <- ggplot(data = d.acf.df1, aes(x=lag, y=acf)) +
+      geom_hline(aes(yintercept=0)) +
+      geom_segment(aes(xend=lag, yend=0)) +
+      theme_minimal()
+#ap1
+
+ap2 <- ggplot(data = d.acf.df2, aes(x=lag, y=acf)) +
+      geom_hline(aes(yintercept=0)) +
+      geom_segment(aes(xend=lag, yend=0)) +
+      theme_minimal()
+#ap2
+
+ap3 <- ggplot(data = d.acf.df3, aes(x=lag, y=acf)) +
+      geom_hline(aes(yintercept=0)) +
+      geom_segment(aes(xend=lag, yend=0)) +
+      theme_minimal()
+#ap3
+
+# Quantile-Quantile plot
+qp1 <- ggplot(r.df, aes(sample=Residual1)) + 
+      stat_qq(color="firebrick2", alpha=1) +
+      theme_minimal() +
+      geom_abline(intercept = mean(r.df$Residual1), slope = sd(r.df$Residual1))
+#qp1
+
+qp2 <- ggplot(r.df, aes(sample=Residual2)) + 
+      stat_qq(color="firebrick2", alpha=1) +
+      theme_minimal() +
+      geom_abline(intercept = mean(r.df$Residual2), slope = sd(r.df$Residual2))
+#qp2
+
+qp3 <- ggplot(r.df, aes(sample=Residual3)) + 
+      stat_qq(color="firebrick2", alpha=1) +
+      theme_minimal() +
+      geom_abline(intercept = mean(r.df$Residual3), slope = sd(r.df$Residual3))
+#qp3
+
+grid.arrange(rp1,rp2,rp3 ,hp1,hp2,hp3, ap1,ap2,ap3, qp1,qp2,qp3)
+}
